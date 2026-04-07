@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="ECHO: Efficient Chest X-ray Report Generation with One-step Block Diffusion">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ECHO: Efficient Chest X-ray Report Generation with One-step Block Diffusion</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" type="image/png" href="./images/logo.png">
+  <link rel="stylesheet" href="./static/css/float.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+  </script>
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      "HTML-CSS": { styles: { '.MathJax_Display': { color: "#333" }, '.MathJax': { color: "#333" } } },
+      tex2jax: { inlineMath: [['$','$'], ['\\(','\\)']] }
+    });
+  </script>
+
+  <style>
+    /* Light layout aligned with nvlabs.github.io/Fast-dLLM/ */
+    :root {
+      --echo-bg:       #ffffff;
+      --echo-text:     #333333;
+      --echo-muted:    #555555;
+      --echo-faint:    #888888;
+      --echo-border:   #e8e8e8;
+      /* Sampled from images/midea.png */
+      --echo-midea-blue:       #45a2db;
+      --echo-midea-blue-deep:  #2d8fc9;
+      --echo-midea-blue-light: #6bb8e8;
+      --echo-hl:       #45a2db;
+    }
+
+    html { background-color: var(--echo-bg); }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: var(--echo-text);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    a { color: #0d47a1; }
+    a:hover { color: #1565c0; text-decoration: underline; }
+
+    /* Hero: white card like Fast-dLLM */
+    .echo-hero {
+      text-align: center;
+      padding: 2.5rem 1rem 2rem;
+      background-color: #fff;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .echo-hero .main-title-text,
+    .echo-hero .subtitle-text { color: var(--echo-midea-blue) !important; }
+
+    h1.title, h2.title, h3.title, .title {
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--echo-midea-blue) !important;
+      position: relative;
+    }
+
+    h2.title { display: inline-block; padding-bottom: 12px; }
+    h2.title::after {
+      content: '';
+      position: absolute; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 36px; height: 3px;
+      background: linear-gradient(90deg, var(--echo-midea-blue-deep), var(--echo-midea-blue-light));
+      border-radius: 2px;
+      transition: width .45s cubic-bezier(.25,.8,.25,1);
+    }
+    h2.title:hover::after { width: 50%; }
+
+    /* Hero subtitle hover (same “lift” feel as section titles) */
+    .echo-hero .subtitle-text {
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s ease, color 0.3s ease;
+    }
+    .echo-hero .subtitle-text:hover {
+      transform: scale(1.03) translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    /* Section headings: text-only, keep hover motion */
+    h2.title .section-text {
+      display: inline-block;
+      vertical-align: middle;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s ease;
+    }
+    h2.title:hover .section-text {
+      transform: scale(1.04) translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    .publication-authors { color: var(--echo-text); }
+    .publication-authors .affil-note { color: var(--echo-faint); }
+
+    /* Institution logos — same slot as Fast-dLLM (below affiliations, above buttons) */
+    .institution-logos {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 72px;
+      padding: 16px 16px;
+      background-color: #fff;
+    }
+    .institution-logos img {
+      width: auto;
+      height: 52px;
+      object-fit: contain;
+      vertical-align: middle;
+    }
+    .institution-logos .logo-midea img { height: 52px; }
+    .institution-logos .logo-bjtu img { height: 46px; }
+    .institution-logos .logo-dut img { height: 46px; }
+
+    /* Black pill buttons (Fast-dLLM style) */
+    .button.is-dark {
+      background-color: #000 !important;
+      color: #fff !important;
+      border: none !important;
+      border-radius: 30px !important;
+      font-size: 0.95rem !important;
+      padding-left: 1.25rem !important;
+      padding-right: 1.25rem !important;
+    }
+    .button.is-dark:hover {
+      background-color: #333 !important;
+      color: #fff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .highlight-box {
+      background: #fafafa;
+      border: 1px solid var(--echo-border);
+      border-left: 4px solid #000;
+      border-radius: 10px;
+      padding: 22px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .highlight-box:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    .footer { background: #fff; color: var(--echo-muted); padding-bottom: 2.5rem; }
+
+    /* Hovering anywhere in the title line scales both logo and ECHO text together */
+    .echo-title-line:hover .project-logo { transform: scale(1.08) rotate(0deg) !important; }
+    .echo-title-line:hover .main-title-text { transform: scale(1.06) translateY(-3px) !important; filter: brightness(1.12); }
+
+    /* Logo + “ECHO”: separate entrance animations (text must not rely on parent opacity alone) */
+    .echo-title-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    .echo-hero .project-logo {
+      transition: transform .3s ease;
+      filter: none;
+      opacity: 0;
+      transform: scale(0.82) rotate(-6deg);
+      animation: echoLogoPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.06s forwards;
+    }
+    @keyframes echoLogoPop {
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+    .echo-hero .main-title-text {
+      display: inline-block;
+      font-weight: 800;
+      opacity: 0;
+      transform: translate3d(0, 18px, 0) scale(0.94);
+      animation: echoNameIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+      will-change: transform, opacity;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s ease;
+    }
+    @keyframes echoNameIn {
+      0%   { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.94); }
+      55%  { opacity: 1; transform: translate3d(0, -5px, 0) scale(1.04); }
+      100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+    }
+    .subtitle-text {
+      opacity: 0;
+      animation: fadeInUp 0.8s ease-out 0.45s forwards;
+      display: inline-block;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #BibTeX pre {
+      background: #f6f6f6;
+      border: 1px solid var(--echo-border);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    #BibTeX code { color: #444; font-size: 13px; }
+
+    .paper-figure-wrap { margin: 1.25rem auto 0; }
+    .paper-figure-wrap img {
+      width: 100%; height: auto;
+      border-radius: 10px;
+      border: 1px solid var(--echo-border);
+      box-shadow: 2px 4px 16px rgba(0,0,0,0.08);
+    }
+    .figure-caption {
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--echo-muted);
+      text-align: justify;
+      margin-top: 0.85rem;
+    }
+    .figure-caption b { color: var(--echo-text); }
+
+    /* Lead video — Fast-dLLM .video-container */
+    .echo-video-lead {
+      background: #fff;
+      padding-top: 1.25rem !important;
+      padding-bottom: 0.5rem !important;
+    }
+    .video-container-fastdllm {
+      text-align: center;
+      margin: 12px 0 8px;
+    }
+    .video-container-fastdllm video {
+      max-width: 80%;
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 2px 2px 10px 3px rgba(0,0,0,0.15);
+    }
+    .video-container-fastdllm .video-cap {
+      margin-top: 12px;
+      font-size: 1em;
+      color: var(--echo-muted);
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .institution-logos { gap: 40px; }
+      .video-container-fastdllm video { max-width: 100%; }
+    }
+
+    .section { background: #fff; }
+    .hero.is-big { background: #fff !important; }
+
+    .publication-authors a { color: #0d47a1 !important; }
+    .footer .icon-link { color: #333 !important; }
+    .footer .icon-link:hover { color: #000 !important; }
+  </style>
+</head>
+<body>
+
+<section class="hero echo-hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title" style="display: flex; flex-direction: column; align-items: center;">
+            <div class="echo-title-line">
+              <img src="./images/logo.png" style="width: 60px; height: auto;" alt="ECHO logo" class="project-logo"/>
+              <span class="main-title-text">ECHO</span>
+            </div>
+            <span class="subtitle-text" style="font-size: 0.58em; font-weight: 400; letter-spacing: 0.02em;">Efficient Chest X-ray Report Generation with One-step Block Diffusion</span>
+          </h1>
+          <div class="is-size-5 publication-authors" style="line-height: 1.55;">
+            <span class="author-block">Lifeng Chen<sup>1,2*</sup>,</span>
+            <span class="author-block"> Tianqi You<sup>1,3*</sup>,</span>
+            <span class="author-block"> <a href="https://scholar.google.com/citations?user=wFOk3PQAAAAJ&amp;hl=zh-CN" target="_blank" rel="noopener noreferrer">Hao Liu</a><sup>1&#x2020;&#x2021;</sup>,</span>
+            <span class="author-block"> Zhimin Bao<sup>1</sup>,</span>
+            <span class="author-block"> Jile Jiao<sup>1</sup>,</span>
+            <span class="author-block"> Xiao Han<sup>1</sup>,</span>
+            <span class="author-block"> Zicai Ou<sup>1</sup>,</span>
+            <span class="author-block"> <a href="https://scholar.google.com/citations?user=cO9hYf4AAAAJ&amp;hl=id" target="_blank" rel="noopener noreferrer">Tao Sun</a><sup>1</sup>,</span>
+            <span class="author-block"> <a href="https://dblp.org/pid/317/3067.html" target="_blank" rel="noopener noreferrer">Xiaofeng Mou</a><sup>1</sup>,</span>
+            <span class="author-block"> <a href="https://scholar.google.com/citations?user=OEZ816YAAAAJ&amp;hl=en" target="_blank" rel="noopener noreferrer">Xiaojie Jin</a><sup>2</sup>,</span>
+            <span class="author-block"> and <a href="https://scholar.google.com/citations?user=y7BhrpQAAAAJ&amp;hl=en" target="_blank" rel="noopener noreferrer">Yi Xu</a><sup>1&#x2020;</sup></span>
+          </div>
+
+          <div class="is-size-6 publication-authors" style="margin-top: 0.75rem; line-height: 1.65;">
+            <div><sup>1</sup> Midea AI Research</div>
+            <div><sup>2</sup> Beijing Jiaotong University</div>
+            <div><sup>3</sup> Dalian University of Technology</div>
+          </div>
+
+          <div class="is-size-6 publication-authors affil-note" style="margin-top: 0.6rem;">
+            <sup>*</sup>Equal Contribution,
+            <span style="margin-left: 0.35rem;"><sup>&#x2020;</sup>Corresponding Author,</span>
+            <span style="margin-left: 0.35rem;"><sup>&#x2021;</sup>Project Leader.</span>
+          </div>
+
+          <div style="overflow: hidden; background-color: #fff; margin-top: 8px;">
+            <div class="institution-logos">
+              <div class="logo-midea">
+                <img src="./images/midea.png" alt="Midea AI Research (affiliation 1)">
+              </div>
+              <div class="logo-bjtu">
+                <img src="./images/bjtu_logo.png" alt="Beijing Jiaotong University (affiliation 2)">
+              </div>
+              <div class="logo-dut">
+                <img src="./images/dut_logo.png" alt="Dalian University of Technology (affiliation 3)">
+              </div>
+            </div>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="./static/papers/echo.pdf"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/0000.00000"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="ai ai-arxiv"></i></span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <span class="link-block" style="display: none;" id="btn-video">
+                <a href="#"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-youtube"></i></span>
+                  <span>Video</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://github.com/YOUR_USERNAME/ECHO"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span>
+                  <span>Code</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Demo video first (autoplay muted — browser policy; matches Fast-dLLM) -->
+<section class="section echo-video-lead">
+  <div class="container is-max-desktop">
+    <div class="video-container-fastdllm">
+      <video
+        src="./images/demo.mp4"
+        autoplay
+        muted
+        loop
+        playsinline
+        controls>
+        Your browser does not support the video tag.
+      </video>
+      <p class="video-cap">Demonstration of ECHO generating a radiology report from a chest X-ray input.</p>
+    </div>
+  </div>
+</section>
+
+<!-- About ECHO (formerly Abstract) — before Motivation -->
+<section class="section" style="padding-top: 2rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <h2 class="title is-3">
+          <span class="section-text">About&nbsp;&nbsp;ECHO</span>
+        </h2>
+        <div class="content has-text-justified">
+          <p style="font-size: 19px; line-height: 1.7;">
+            Chest X-ray report generation (CXR-RG) has the potential to substantially alleviate radiologists' workload. However, conventional autoregressive vision–language models (VLMs) suffer from high inference latency due to sequential token decoding. Diffusion-based models offer a promising alternative through parallel generation, but they still require multiple denoising iterations. Compressing multi-step denoising to a single step could further reduce latency, but often degrades textual coherence due to the mean-field bias introduced by token-factorized denoisers. To address this challenge, we propose <b>ECHO</b>, an efficient diffusion-based VLM (dVLM) for chest X-ray report generation. ECHO enables stable one-step-per-block inference via a novel <b>Direct Conditional Distillation (DCD)</b> framework, which mitigates the mean-field limitation by constructing unfactorized supervision from on-policy diffusion trajectories to encode joint token dependencies. In addition, we introduce a <b>Response-Asymmetric Diffusion (RAD)</b> training strategy that further improves training efficiency while maintaining model effectiveness. Extensive experiments demonstrate that ECHO surpasses state-of-the-art autoregressive methods, improving RaTE and SemScore by 64.33% and 60.58% respectively, while achieving an 8× inference speedup without compromising clinical accuracy.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Motivation + Fig. 1 -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <h2 class="title is-3">
+          <span class="section-text">Motivation</span>
+        </h2>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-full">
+        <div class="content has-text-justified">
+          <p style="font-size: 19px; line-height: 1.7;">
+            Discrete diffusion language models approximate the joint token distribution through token factorization, treating each position as conditionally independent. This approximation ignores inter-token dependencies, requiring multi-step remasking to progressively recover output coherence. Each additional step, however, incurs an extra model forward pass, increasing inference latency and creating a fundamental quality–speed dilemma. <b>ECHO</b> resolves this through <b>Direct Conditional Distillation (DCD)</b>, which constructs non-factorized supervision from the teacher's on-policy multi-step trajectories, enabling the student to capture joint token dependencies in a single forward pass per block—achieving multi-step quality at single-step speed.
+          </p>
+        </div>
+        <figure class="paper-figure-wrap has-text-centered">
+          <img src="./images/figure1.png" class="interpolation-image" alt="Fig. 1: Motivation and performance of ECHO"/>
+          <figcaption class="figure-caption">
+            <b>Fig. 1:</b> Motivation and performance of ECHO. <b>(a)</b> Decoding all tokens simultaneously in one step produces incoherent outputs, as standard diffusion models predict each position independently. Our Direct Conditional Distillation (DCD) distills from a non-factorized target, yielding coherent one-step-per-block outputs. <b>(b)</b> Compared to both autoregressive and diffusion-based baselines, ECHO achieves a favorable trade-off between generation quality (SemScore) and decoding throughput (tokens per forward pass). Here, SDAR* denotes SDAR [9] implemented under the multimodal large language model setting.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Method + Fig. 2 -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <h2 class="title is-3">
+          <span class="section-text">Method</span>
+        </h2>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-full">
+        <div class="content has-text-justified">
+          <p style="font-size: 19px; line-height: 1.7;">
+            ECHO is trained in three stages: continued pre-training yields ECHO<sub>AR</sub>; <b>Response-Asymmetric Diffusion (RAD)</b> adaptation converts it into a block diffusion backbone ECHO<sub>Base</sub>; <b>DCD</b> then distills ECHO<sub>Base</sub> into the final one-step-per-block model. RAD avoids redundant duplication of long vision contexts; DCD aligns the student to the teacher's joint targets via KL divergence. Details follow Fig.&nbsp;2.
+          </p>
+        </div>
+        <figure class="paper-figure-wrap has-text-centered">
+          <img src="./images/figure2.png" class="interpolation-image" alt="Fig. 2: ECHO training pipeline overview"/>
+          <figcaption class="figure-caption">
+            <b>Fig. 2:</b> Overview of the ECHO training pipeline. ECHO is built in three successive stages: continued pre-training (Stage&nbsp;1) produces ECHO<sub>AR</sub>; Response-Asymmetric Diffusion adaptation (Stage&nbsp;2) converts it into the block diffusion model ECHO<sub>Base</sub>; and Direct Conditional Distillation (Stage&nbsp;3) distills ECHO<sub>Base</sub> into the final one-step-per-block model ECHO. <b>(a)</b> RAD duplicates only the response portion of the training sequence, avoiding the redundant duplication of long vision token contexts required by prior two-stage conversion methods. <b>(b)</b> DCD proceeds in two phases: the teacher's confidence-heuristic remasking trajectory is collected to form a joint, non-factorized supervision target, which is then used to align the student's single-step prediction via KL divergence.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Highlights -->
+<section class="hero is-big" style="margin-top: 35px; padding-bottom: 35px;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <br>
+        <h2 class="title is-3"><span class="fire-icon">&#x1F525;</span><span class="section-text">Highlights</span></h2>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-full">
+
+          <div class="highlight-box">
+            <p style="font-size: 20px; margin-bottom: 0;">
+              1. <b>Direct Conditional Distillation (DCD)</b> — <span style="color: var(--echo-hl);">Non-factorized supervision from the teacher's multi-step trajectories lets the student model joint token dependencies in one forward pass per block.</span>
+            </p>
+          </div>
+
+          <div class="highlight-box">
+            <p style="font-size: 20px; margin-bottom: 0;">
+              2. <b>Response-Asymmetric Diffusion (RAD)</b> — <span style="color: var(--echo-hl);">Duplicates only the report (response) tokens during adaptation, avoiding wasted compute on long vision contexts.</span>
+            </p>
+          </div>
+
+          <div class="highlight-box">
+            <p style="font-size: 20px; margin-bottom: 0;">
+              3. <b>Quality at single-step speed</b> — <span style="color: var(--echo-hl);">Strong SemScore with high decoding throughput versus autoregressive and diffusion baselines on chest X-ray report generation (see Experiments).</span>
+            </p>
+          </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Experiments -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <h2 class="title is-3">
+          <span class="section-text">Experiments</span>
+        </h2>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-full">
+        <div class="content has-text-justified">
+          <p style="font-size: 19px; line-height: 1.7;">
+            On chest X-ray report generation, <b>ECHO</b> improves <b>clinical semantic quality (SemScore)</b> while delivering <b>much higher decoding throughput</b> (tokens per forward pass) than strong autoregressive and diffusion baselines—including multimodal LLM settings—so you get a clearly better <b>quality–speed</b> trade-off (see Fig.&nbsp;1(b) and the figure below). Replace dataset names and numeric tables with your paper's final splits and metrics as needed.
+          </p>
+        </div>
+        <figure class="paper-figure-wrap has-text-centered">
+          <img src="./images/experiment.png" class="interpolation-image" alt="ECHO experimental results"/>
+          <figcaption class="figure-caption">
+            <b>Main results:</b> ECHO sits at the favorable region of the quality–throughput frontier relative to baselines; consult the paper for full tables, ablations, and per-dataset numbers.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{echo2026,
+  title={{ECHO}: Efficient Chest X-ray Report Generation with One-step Block Diffusion},
+  author={Chen, Lifeng and You, Tianqi and Liu, Hao and Bao, Zhimin and Jiao, Jile and Han, Xiao and Ou, Zicai and Sun, Tao and Mou, Xiaofeng and Jin, Xiaojie and Xu, Yi},
+  journal={arXiv preprint arXiv:0000.00000},
+  year={2026}
+}
+</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link" href="./static/papers/echo.pdf">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+      <a class="icon-link" href="https://github.com/YOUR_USERNAME/ECHO" class="external-link">
+        <i class="fab fa-github"></i>
+      </a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is adapted from <a
+            href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>, licensed under a <a rel="license"
+            href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+$(document).ready(function() {
+    const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    /* Skip hero: scroll-reveal starts at opacity:0 and breaks on-load title animation */
+    $('section').not('.echo-hero').each(function() {
+      $(this).addClass('scroll-reveal');
+      observer.observe(this);
+    });
+    $('.highlight-box').each(function(index) {
+      $(this).addClass('scroll-reveal');
+      $(this).css('transition-delay', (index * 0.1) + 's');
+      observer.observe(this);
+    });
+});
+</script>
+
+</body>
+</html>
