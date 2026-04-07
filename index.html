@@ -58,7 +58,7 @@
     a { color: #0d47a1; }
     a:hover { color: #1565c0; text-decoration: underline; }
 
-    /* Hero: white card like Fast-dLLM */
+    /* Hero: white card like Fast-dLLM — inner rail full viewport width (not 80% prose) */
     .echo-hero {
       text-align: center;
       padding: 2.5rem 1rem 2rem;
@@ -66,6 +66,12 @@
       border-bottom-left-radius: 20px;
       border-bottom-right-radius: 20px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .echo-hero .container.is-max-desktop {
+      max-width: 80%;
+      width: 100%;
+      margin-left: auto;
+      margin-right: auto;
     }
     .echo-hero .main-title-text,
     .echo-hero .subtitle-text { color: var(--echo-midea-blue) !important; }
@@ -129,9 +135,9 @@
       object-fit: contain;
       vertical-align: middle;
     }
-    .institution-logos .logo-midea img { height: 68px; }
-    .institution-logos .logo-bjtu img { height: 60px; }
-    .institution-logos .logo-dut img { height: 60px; }
+    .institution-logos .logo-midea img { height: 82px; }
+    .institution-logos .logo-bjtu img { height: 72px; }
+    .institution-logos .logo-dut img { height: 72px; }
 
     /* Black pill buttons (Fast-dLLM style) */
     .button.is-dark {
@@ -181,7 +187,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 18px;
+      gap: 26px;
       margin-bottom: 10px;
     }
     .echo-hero .project-logo {
@@ -200,7 +206,7 @@
     .echo-hero .main-title-text {
       display: inline-block;
       font-weight: 800;
-      font-size: 1.2em;
+      font-size: 1.7em;
       opacity: 0;
       transform: translate3d(0, 18px, 0) scale(0.94);
       animation: echoNameIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
@@ -211,6 +217,11 @@
       0%   { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.94); }
       55%  { opacity: 1; transform: translate3d(0, -5px, 0) scale(1.04); }
       100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+    }
+    .echo-hero .subtitle-text {
+      font-size: 1.1em;
+      font-weight: 400;
+      letter-spacing: 0.02em;
     }
     .subtitle-text {
       opacity: 0;
@@ -256,8 +267,9 @@
       text-align: center;
       margin: 12px 0 8px;
     }
+    /* 宽度相对于 .echo-video-lead 内的 container；不要再 ×0.8，否则在 768px 栏里只剩 ~64% ≈ 490px */
     .video-container-fastdllm video {
-      max-width: 80%;
+      max-width: none;
       width: 100%;
       height: auto;
       border-radius: 10px;
@@ -267,7 +279,7 @@
       margin-top: 12px;
       font-size: 1em;
       color: var(--echo-muted);
-      max-width: 720px;
+      max-width: calc(720px * 0.8);
       margin-left: auto;
       margin-right: auto;
       line-height: 1.5;
@@ -282,8 +294,33 @@
     .hero.is-big { background: #fff !important; }
 
     .publication-authors a { color: #0d47a1 !important; }
-    .footer .icon-link { color: #333 !important; }
-    .footer .icon-link:hover { color: #000 !important; }
+
+    /* Video rail: Bulma is-max-desktop is 960px — ×0.8 for horizontal scale only (fonts unchanged) */
+    .echo-video-lead .container.is-max-desktop {
+      max-width: calc(960px * 0.8);
+    }
+
+    /* Body prose: was 80% viewport; ×0.8 again for narrower side rails only */
+    .container.is-max-desktop.echo-prose-width {
+      width: calc(80% * 0.8);
+      max-width: calc(80% * 0.8);
+      margin-left: auto;
+      margin-right: auto;
+    }
+    @media (max-width: 768px) {
+      .container.is-max-desktop.echo-prose-width {
+        width: calc(92% * 0.8);
+        max-width: calc(92% * 0.8);
+      }
+    }
+
+    /* Inline SVG (Heroicons face-smile outline, MIT) — inherits button text color */
+    .echo-hf-icon-svg {
+      width: 1.15em;
+      height: 1.15em;
+      vertical-align: -0.2em;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -295,19 +332,19 @@
         <div class="column has-text-centered">
           <h1 class="title is-1 publication-title" style="display: flex; flex-direction: column; align-items: center;">
             <div class="echo-title-line">
-              <img src="./images/logo.png" style="width: 72px; height: auto;" alt="ECHO logo" class="project-logo"/>
+              <img src="./images/logo.png" style="width: 102px; height: auto;" alt="ECHO logo" class="project-logo"/>
               <span class="main-title-text">ECHO</span>
             </div>
-            <span class="subtitle-text" style="font-size: 0.78em; font-weight: 400; letter-spacing: 0.02em;">Efficient Chest X-ray Report Generation<br>with One-step Block Diffusion</span>
+            <span class="subtitle-text">Efficient Chest X-ray Report Generation<br>with One-step Block Diffusion</span>
           </h1>
-          <div class="is-size-5 publication-authors" style="line-height: 1.55; max-width: 840px; margin-left: auto; margin-right: auto;">
+          <div class="is-size-5 publication-authors" style="line-height: 1.55; max-width: 100%; margin-left: auto; margin-right: auto;">
             <span class="author-block"><a href="https://goupup-ai.github.io/echo.github.io/" target="_blank" rel="noopener noreferrer">Lifeng Chen</a><sup>1,2*</sup>,</span>
             <span class="author-block"> <a href="https://goupup-ai.github.io/echo.github.io/" target="_blank" rel="noopener noreferrer">Tianqi You</a><sup>1,3*</sup>,</span>
             <span class="author-block"> <a href="https://scholar.google.com/citations?user=wFOk3PQAAAAJ&amp;hl=zh-CN" target="_blank" rel="noopener noreferrer">Hao Liu</a><sup>1&#x2020;&#x2021;</sup>,</span>
             <span class="author-block"> <a href="https://goupup-ai.github.io/echo.github.io/" target="_blank" rel="noopener noreferrer">Zhimin Bao</a><sup>1</sup>,</span>
             <span class="author-block"> <a href="https://goupup-ai.github.io/echo.github.io/" target="_blank" rel="noopener noreferrer">Jile Jiao</a><sup>1</sup>,</span>
             <span class="author-block"> <a href="https://goupup-ai.github.io/echo.github.io/" target="_blank" rel="noopener noreferrer">Xiao Han</a><sup>1</sup>,</span><br>
-            <span class="author-block"> <a href="https://goupup-ai.github.io/echo.github.io/" target="_blank" rel="noopener noreferrer">Zicai Ou</a><sup>1</sup>,</span>
+            <span class="author-block"> <a href="https://goupup-ai.github.io/echo.github.io/" target="_blank" rel="noopener noreferrer">Zhicai Ou</a><sup>1</sup>,</span>
             <span class="author-block"> <a href="https://scholar.google.com/citations?user=cO9hYf4AAAAJ&amp;hl=id" target="_blank" rel="noopener noreferrer">Tao Sun</a><sup>1</sup>,</span>
             <span class="author-block"> <a href="https://goupup-ai.github.io/echo.github.io/" target="_blank" rel="noopener noreferrer">Xiaofeng Mou</a><sup>1</sup>,</span>
             <span class="author-block"> <a href="https://scholar.google.com/citations?user=OEZ816YAAAAJ&amp;hl=en" target="_blank" rel="noopener noreferrer">Xiaojie Jin</a><sup>2</sup>,</span>
@@ -341,17 +378,22 @@
           <div class="column has-text-centered">
             <div class="publication-links">
               <span class="link-block">
-                <a href="./static/papers/echo.pdf"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon"><i class="fas fa-file-pdf"></i></span>
-                  <span>Paper</span>
-                </a>
-              </span>
-              <span class="link-block">
                 <a href="https://arxiv.org/abs/0000.00000"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon"><i class="ai ai-arxiv"></i></span>
                   <span>arXiv</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://huggingface.co/goupup-ai/ECHO"
+                   class="external-link button is-normal is-rounded is-dark"
+                   target="_blank" rel="noopener noreferrer">
+                  <span class="icon" aria-hidden="true">
+                    <svg class="echo-hf-icon-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false" aria-hidden="true">
+                      <path d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+                    </svg>
+                  </span>
+                  <span>Hugging Face</span>
                 </a>
               </span>
               <span class="link-block" style="display: none;" id="btn-video">
@@ -396,7 +438,7 @@
 
 <!-- About ECHO (formerly Abstract) — before Motivation -->
 <section class="section" style="padding-top: 2rem;">
-  <div class="container is-max-desktop">
+  <div class="container is-max-desktop echo-prose-width">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">
@@ -414,7 +456,7 @@
 
 <!-- Motivation + Fig. 1 -->
 <section class="section">
-  <div class="container is-max-desktop">
+  <div class="container is-max-desktop echo-prose-width">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">
@@ -442,7 +484,7 @@
 
 <!-- Method + Fig. 2 -->
 <section class="section">
-  <div class="container is-max-desktop">
+  <div class="container is-max-desktop echo-prose-width">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">
@@ -470,7 +512,7 @@
 
 <!-- Highlights -->
 <section class="hero is-big" style="margin-top: 35px; padding-bottom: 35px;">
-  <div class="container is-max-desktop">
+  <div class="container is-max-desktop echo-prose-width">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <br>
@@ -505,7 +547,7 @@
 
 <!-- Experiments -->
 <section class="section">
-  <div class="container is-max-desktop">
+  <div class="container is-max-desktop echo-prose-width">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">
@@ -532,7 +574,7 @@
 </section>
 
 <section class="section" id="BibTeX">
-  <div class="container is-max-desktop content">
+  <div class="container is-max-desktop content echo-prose-width">
     <h2 class="title">BibTeX</h2>
     <pre><code>@article{echo2026,
   title={{ECHO}: Efficient Chest X-ray Report Generation with One-step Block Diffusion},
@@ -546,14 +588,6 @@
 
 <footer class="footer">
   <div class="container">
-    <div class="content has-text-centered">
-      <a class="icon-link" href="./static/papers/echo.pdf">
-        <i class="fas fa-file-pdf"></i>
-      </a>
-      <a class="icon-link" href="https://github.com/YOUR_USERNAME/ECHO" class="external-link">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
     <div class="columns is-centered">
       <div class="column is-8">
         <div class="content">
