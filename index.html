@@ -294,7 +294,7 @@
 
     .publication-authors a { color: #0d47a1 !important; }
 
-    /* Hero only: full page width */
+    /* Hero only: full page width — override Bulma container */
     .echo-hero .container.is-max-desktop {
       max-width: 100% !important;
       width: 100% !important;
@@ -302,13 +302,13 @@
       padding-right: 2rem;
     }
 
-    /* Video + prose: 80vw (viewport-relative, always responsive) */
-    .echo-video-lead .container.is-max-desktop,
-    .container.is-max-desktop.echo-prose-width {
-      width: 80vw !important;
-      max-width: 80vw !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
+    /* Video + prose: pure custom rail, no Bulma interference */
+    .echo-rail {
+      width: 80vw;
+      max-width: 80vw;
+      margin-left: auto;
+      margin-right: auto;
+      box-sizing: border-box;
     }
 
     @media (max-width: 768px) {
@@ -316,10 +316,9 @@
         padding-left: 1rem;
         padding-right: 1rem;
       }
-      .echo-video-lead .container.is-max-desktop,
-      .container.is-max-desktop.echo-prose-width {
-        width: 92vw !important;
-        max-width: 92vw !important;
+      .echo-rail {
+        width: 92vw;
+        max-width: 92vw;
       }
     }
 
@@ -427,7 +426,7 @@
 
 <!-- Demo video first (autoplay muted — browser policy; matches Fast-dLLM) -->
 <section class="section echo-video-lead">
-  <div class="container is-max-desktop">
+  <div class="echo-rail">
     <div class="video-container-fastdllm">
       <video
         src="./images/demo_cropped.mp4"
@@ -445,7 +444,7 @@
 
 <!-- About ECHO (formerly Abstract) — before Motivation -->
 <section class="section" style="padding-top: 2rem;">
-  <div class="container is-max-desktop echo-prose-width">
+  <div class="echo-rail">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">
@@ -463,7 +462,7 @@
 
 <!-- Motivation + Fig. 1 -->
 <section class="section">
-  <div class="container is-max-desktop echo-prose-width">
+  <div class="echo-rail">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">
@@ -491,7 +490,7 @@
 
 <!-- Method + Fig. 2 -->
 <section class="section">
-  <div class="container is-max-desktop echo-prose-width">
+  <div class="echo-rail">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">
@@ -519,7 +518,7 @@
 
 <!-- Highlights -->
 <section class="hero is-big" style="margin-top: 35px; padding-bottom: 35px;">
-  <div class="container is-max-desktop echo-prose-width">
+  <div class="echo-rail">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <br>
@@ -554,7 +553,7 @@
 
 <!-- Experiments -->
 <section class="section">
-  <div class="container is-max-desktop echo-prose-width">
+  <div class="echo-rail">
     <div class="columns is-centered has-text-centered">
       <div class="column is-full">
         <h2 class="title is-3">
@@ -581,7 +580,7 @@
 </section>
 
 <section class="section" id="BibTeX">
-  <div class="container is-max-desktop content echo-prose-width">
+  <div class="echo-rail content">
     <h2 class="title">BibTeX</h2>
     <pre><code>@article{echo2026,
   title={{ECHO}: Efficient Chest X-ray Report Generation with One-step Block Diffusion},
