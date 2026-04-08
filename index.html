@@ -294,28 +294,29 @@
 
     .publication-authors a { color: #0d47a1 !important; }
 
-    /* Hero + video: full page width */
-    .echo-hero .container.is-max-desktop,
-    .echo-video-lead .container.is-max-desktop {
+    /* Hero only: full page width */
+    .echo-hero .container.is-max-desktop {
       max-width: 100% !important;
       width: 100% !important;
       padding-left: 2rem;
       padding-right: 2rem;
     }
 
-    /* Body prose only: 80% viewport */
+    /* Video + prose: 80% of page (hero baseline) */
+    .echo-video-lead .container.is-max-desktop,
     .container.is-max-desktop.echo-prose-width {
       width: 80%;
       max-width: 80%;
       margin-left: auto;
       margin-right: auto;
     }
+
     @media (max-width: 768px) {
-      .echo-hero .container.is-max-desktop,
-      .echo-video-lead .container.is-max-desktop {
+      .echo-hero .container.is-max-desktop {
         padding-left: 1rem;
         padding-right: 1rem;
       }
+      .echo-video-lead .container.is-max-desktop,
       .container.is-max-desktop.echo-prose-width {
         width: 92%;
         max-width: 92%;
