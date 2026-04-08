@@ -302,13 +302,13 @@
       padding-right: 2rem;
     }
 
-    /* Video + prose: 80% of page (hero baseline) */
+    /* Video + prose: 80vw (viewport-relative, always responsive) */
     .echo-video-lead .container.is-max-desktop,
     .container.is-max-desktop.echo-prose-width {
-      width: 80%;
-      max-width: 80%;
-      margin-left: auto;
-      margin-right: auto;
+      width: 80vw !important;
+      max-width: 80vw !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
     }
 
     @media (max-width: 768px) {
@@ -318,8 +318,8 @@
       }
       .echo-video-lead .container.is-max-desktop,
       .container.is-max-desktop.echo-prose-width {
-        width: 92%;
-        max-width: 92%;
+        width: 92vw !important;
+        max-width: 92vw !important;
       }
     }
 
