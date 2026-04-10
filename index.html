@@ -450,7 +450,7 @@
         </h2>
         <div class="content has-text-justified">
           <p style="font-size: 19px; line-height: 1.7;">
-            Chest X-ray report generation (CXR-RG) has the potential to substantially alleviate radiologists' workload. However, conventional autoregressive vision–language models (VLMs) suffer from high inference latency due to sequential token decoding. Diffusion-based models offer a promising alternative through parallel generation, but they still require multiple denoising iterations. Compressing multi-step denoising to a single step could further reduce latency, but often degrades textual coherence due to the mean-field bias introduced by token-factorized denoisers. To address this challenge, we propose <b>ECHO</b>, an efficient diffusion-based VLM (dVLM) for chest X-ray report generation. ECHO enables stable one-step-per-block inference via a novel <b>Direct Conditional Distillation (DCD)</b> framework, which mitigates the mean-field limitation by constructing unfactorized supervision from on-policy diffusion trajectories to encode joint token dependencies. In addition, we introduce a <b>Response-Asymmetric Diffusion (RAD)</b> training strategy that further improves training efficiency while maintaining model effectiveness. Extensive experiments demonstrate that ECHO surpasses state-of-the-art autoregressive methods, improving RaTE and SemScore by 64.33% and 60.58% respectively, while achieving an 8× inference speedup without compromising clinical accuracy.
+            <b>ECHO</b> is a discrete diffusion vision–language model for automated chest X-ray report generation. Existing diffusion language models face an inherent quality–speed trade-off, where generating coherent outputs requires multiple denoising steps that substantially increase inference latency. ECHO overcomes this limitation by introducing non-factorized distillation targets constructed from the teacher's on-policy denoising trajectory, enabling coherent one-step-per-block inference that prior distillation methods could not achieve. A response-asymmetric adaptation strategy further reduces the training cost of AR-to-diffusion conversion by eliminating redundant processing of long vision token contexts. On three public CXR benchmarks, ECHO consistently outperforms autoregressive and diffusion-based state-of-the-art models, improving RaTEScore and SemScore by <b>64.33%</b> and <b>60.58%</b> respectively over AR baselines, while achieving up to an <b>8× inference speedup</b> with marginal quality degradation.
           </p>
         </div>
       </div>
@@ -472,13 +472,13 @@
       <div class="column is-full">
         <div class="content has-text-justified">
           <p style="font-size: 19px; line-height: 1.7;">
-            Discrete diffusion language models approximate the joint token distribution through token factorization, treating each position as conditionally independent. This approximation ignores inter-token dependencies, requiring multi-step remasking to progressively recover output coherence. Each additional step, however, incurs an extra model forward pass, increasing inference latency and creating a fundamental quality–speed dilemma. <b>ECHO</b> resolves this through <b>Direct Conditional Distillation (DCD)</b>, which constructs non-factorized supervision from the teacher's on-policy multi-step trajectories, enabling the student to capture joint token dependencies in a single forward pass per block—achieving multi-step quality at single-step speed.
+            Discrete diffusion language models approximate the joint token distribution through <em>token factorization</em>, treating each position as conditionally independent. This approximation ignores inter-token dependencies, requiring multi-step remasking to progressively recover output coherence. Each additional denoising step, however, incurs an extra model forward pass, increasing inference latency and creating a fundamental <em>quality–speed dilemma</em>. ECHO resolves this through <b>Direct Conditional Distillation (DCD)</b>, which constructs non-factorized supervision from the teacher's on-policy multi-step trajectories, enabling the student to capture joint token dependencies in a single forward pass per block — achieving multi-step quality at single-step speed.
           </p>
         </div>
         <figure class="paper-figure-wrap has-text-centered">
           <img src="./images/figure1.png" class="interpolation-image" alt="Fig. 1: Motivation and performance of ECHO"/>
           <figcaption class="figure-caption">
-            <b>Fig. 1:</b> Motivation and performance of ECHO. <b>(a)</b> Decoding all tokens simultaneously in one step produces incoherent outputs, as standard diffusion models predict each position independently. Our Direct Conditional Distillation (DCD) distills from a non-factorized target, yielding coherent one-step-per-block outputs. <b>(b)</b> Compared to both autoregressive and diffusion-based baselines, ECHO achieves a favorable trade-off between generation quality (SemScore) and decoding throughput (tokens per forward pass). Here, SDAR* denotes SDAR [9] implemented under the multimodal large language model setting.
+            <b>(a)</b> Decoding all tokens simultaneously in one step produces incoherent outputs, as standard diffusion models predict each position independently. Our Direct Conditional Distillation (DCD) distills from a non-factorized target, yielding coherent one-step-per-block outputs. <b>(b)</b> Compared to both autoregressive and diffusion-based baselines, ECHO achieves a favorable trade-off between generation quality (SemScore) and decoding throughput (tokens per forward pass, TPF). SDAR* denotes SDAR implemented in the multimodal large language model setting.
           </figcaption>
         </figure>
       </div>
@@ -500,13 +500,13 @@
       <div class="column is-full">
         <div class="content has-text-justified">
           <p style="font-size: 19px; line-height: 1.7;">
-            ECHO is trained in three stages: continued pre-training yields ECHO<sub>AR</sub>; <b>Response-Asymmetric Diffusion (RAD)</b> adaptation converts it into a block diffusion backbone ECHO<sub>Base</sub>; <b>DCD</b> then distills ECHO<sub>Base</sub> into the final one-step-per-block model. RAD avoids redundant duplication of long vision contexts; DCD aligns the student to the teacher's joint targets via KL divergence. Details follow Fig.&nbsp;2.
+            ECHO is built through three successive training stages, from a domain-specialized autoregressive model to a multi-step block diffusion backbone, and finally to the distilled one-step-per-block model. <b>Response-Asymmetric Diffusion (RAD)</b> adapts the autoregressive model into a block diffusion model by duplicating only the response portion of each training sequence, which eliminates the redundant processing of long vision token contexts imposed by prior two-stage conversion methods. <b>Direct Conditional Distillation (DCD)</b> then distills this multi-step teacher into a single-step student by constructing joint, non-factorized supervision targets from the teacher's confidence-heuristic remasking trajectory, allowing the student to capture inter-token dependencies that single-step decoding would otherwise lose.
           </p>
         </div>
         <figure class="paper-figure-wrap has-text-centered">
           <img src="./images/figure2.png" class="interpolation-image" alt="Fig. 2: ECHO training pipeline overview"/>
           <figcaption class="figure-caption">
-            <b>Fig. 2:</b> Overview of the ECHO training pipeline. ECHO is built in three successive stages: continued pre-training (Stage&nbsp;1) produces ECHO<sub>AR</sub>; Response-Asymmetric Diffusion adaptation (Stage&nbsp;2) converts it into the block diffusion model ECHO<sub>Base</sub>; and Direct Conditional Distillation (Stage&nbsp;3) distills ECHO<sub>Base</sub> into the final one-step-per-block model ECHO. <b>(a)</b> RAD duplicates only the response portion of the training sequence, avoiding the redundant duplication of long vision token contexts required by prior two-stage conversion methods. <b>(b)</b> DCD proceeds in two phases: the teacher's confidence-heuristic remasking trajectory is collected to form a joint, non-factorized supervision target, which is then used to align the student's single-step prediction via KL divergence.
+            <b>Overview of the ECHO training pipeline.</b> ECHO is built in three successive stages: continued pre-training (Stage&nbsp;1) produces ECHO<sub>AR</sub>; Response-Asymmetric Diffusion adaptation (Stage&nbsp;2) converts it into the block diffusion model ECHO<sub>Base</sub>; and Direct Conditional Distillation (Stage&nbsp;3) distills ECHO<sub>Base</sub> into the final one-step-per-block model ECHO. <b>(a)</b> RAD duplicates only the response portion of the training sequence, avoiding the redundant duplication of long vision token contexts required by prior two-stage conversion methods. <b>(b)</b> DCD proceeds in two phases: the teacher's confidence-heuristic remasking trajectory is collected to form a joint, non-factorized supervision target, which is then used to align the student's single-step prediction via KL divergence.
           </figcaption>
         </figure>
       </div>
@@ -528,19 +528,19 @@
 
           <div class="highlight-box">
             <p style="font-size: 20px; margin-bottom: 0;">
-              1. <b>Direct Conditional Distillation (DCD)</b> — <span style="color: var(--echo-hl);">Non-factorized supervision from the teacher's multi-step trajectories lets the student model joint token dependencies in one forward pass per block.</span>
+              🏥 <b>State-of-the-Art CXR Report Generation.</b> <span style="color: var(--echo-hl);">ECHO consistently outperforms both autoregressive and diffusion-based state-of-the-art models on clinical fidelity metrics, with improvements of 64.33% on RaTEScore and 60.58% on SemScore over strong AR baselines, including models larger in size.</span>
             </p>
           </div>
 
           <div class="highlight-box">
             <p style="font-size: 20px; margin-bottom: 0;">
-              2. <b>Response-Asymmetric Diffusion (RAD)</b> — <span style="color: var(--echo-hl);">Duplicates only the report (response) tokens during adaptation, avoiding wasted compute on long vision contexts.</span>
+              ⚡ <b>Up to 8× Inference Speedup.</b> <span style="color: var(--echo-hl);">ECHO achieves up to an 8× decoding speedup over multi-step diffusion baselines with only marginal quality degradation, offering a more favorable quality–speed trade-off than all existing distillation methods across block size configurations.</span>
             </p>
           </div>
 
           <div class="highlight-box">
             <p style="font-size: 20px; margin-bottom: 0;">
-              3. <b>Quality at single-step speed</b> — <span style="color: var(--echo-hl);">Strong SemScore with high decoding throughput versus autoregressive and diffusion baselines on chest X-ray report generation (see Experiments).</span>
+              🧩 <b>Training-Efficient AR-to-Diffusion Adaptation.</b> <span style="color: var(--echo-hl);">By duplicating only the response tokens rather than the full sequence during adaptation, ECHO reduces training FLOPs by 72.3% relative to prior two-stage conversion methods, making the AR-to-diffusion conversion substantially more practical at the scale of high-resolution medical images.</span>
             </p>
           </div>
 
@@ -563,13 +563,13 @@
       <div class="column is-full">
         <div class="content has-text-justified">
           <p style="font-size: 19px; line-height: 1.7;">
-            On chest X-ray report generation, <b>ECHO</b> improves <b>clinical semantic quality (SemScore)</b> while delivering <b>much higher decoding throughput</b> (tokens per forward pass) than strong autoregressive and diffusion baselines—including multimodal LLM settings—so you get a clearly better <b>quality–speed</b> trade-off (see Fig.&nbsp;1(b) and the figure below). Replace dataset names and numeric tables with your paper's final splits and metrics as needed.
+            ECHO is comprehensively evaluated on multiple public CXR benchmarks against a wide range of baselines. On clinical fidelity metrics, ECHO outperforms MedGemma-27B, the current open-source state-of-the-art medical VLM, by 17–40%. Among diffusion-based methods, ECHO also achieves superior quality–speed trade-offs, reaching up to <b>274 tokens per second</b> and a throughput of <b>8 tokens per forward pass</b> with only marginal quality degradation relative to the multi-step teacher.
           </p>
         </div>
         <figure class="paper-figure-wrap has-text-centered">
           <img src="./images/experiment.png" class="interpolation-image" alt="ECHO experimental results"/>
           <figcaption class="figure-caption">
-            <b>Main results:</b> ECHO sits at the favorable region of the quality–throughput frontier relative to baselines; consult the paper for full tables, ablations, and per-dataset numbers.
+            Comparison with autoregressive medical VLMs, general-purpose proprietary models, and diffusion-based distillation methods on three public CXR benchmarks. Metrics cover linguistic quality (ROUGE-L, CIDEr), clinical fidelity (RaTEScore, SemScore), and decoding throughput (TPF: tokens per forward pass; TPS: tokens per second).
           </figcaption>
         </figure>
       </div>
@@ -580,12 +580,12 @@
 <section class="section" id="BibTeX">
   <div class="echo-rail content">
     <h2 class="title">BibTeX</h2>
-    <pre><code>@article{echo2026,
-  title={{ECHO}: Efficient Chest X-ray Report Generation with One-step Block Diffusion},
-  author={Chen, Lifeng and You, Tianqi and Liu, Hao and Bao, Zhimin and Jiao, Jile and Han, Xiao and Ou, Zicai and Sun, Tao and Mou, Xiaofeng and Jin, Xiaojie and Xu, Yi},
-  journal={arXiv preprint arXiv:0000.00000},
-  year={2026}
-}
+    <pre><code>@article{chen2026echo,
+      title={ECHO: Efficient Chest X-ray Report Generation with One-step Block Diffusion},
+      author={},
+      journal={arXiv preprint arXiv:},
+      year={2026}
+    }
 </code></pre>
   </div>
 </section>
